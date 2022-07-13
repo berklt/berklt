@@ -1,5 +1,5 @@
 - 👋 Hi, I’m Berkay Akdogan
-- 👀 I’m interested in data science.  
+- 👀 I’m interested in SQL, data visualisiation tools and Python.   
 - 🌱 I’m currently learning python
 - 📫 How to reach me --> berkay.akdogan@outlook.com
 
