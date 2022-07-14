@@ -1,0 +1,181 @@
+SELECT
+COLUMN_NAME, DATA_TYPE 
+FROM
+INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'standing'
+SELECT
+COLUMN_NAME, DATA_TYPE 
+FROM
+INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'playerstats' 
+SELECT
+COLUMN_NAME, DATA_TYPE 
+FROM
+INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'teamstats' -- 3 tables to modify and analyze 
+
+--ADDING ID COLUMNS 
+ALTER TABLE playerstats 
+ADD player_ID INT NOT NULL
+ALTER TABLE 
+standing ADD team_ID INT NOT NULL
+ALTER TABLE standing
+add newteam_ID INT IDENTITY(1,1)        
+sp_rename 'standing.newteam_ID', 'teamID', 'COLUMN'
+ALTER TABLE 
+teamstats ADD team_ID INT NOT NULL
+-- Modifying Data Types
+SELECT TOP 20 *
+FROM standing
+SP_Rename 'standing.F1', 'team_name', 'COLUMN'
+SELECT max(len(team_name)) 
+FROM standing --22 
+SP_Rename 'standing.W_L', 'Overall', 'COLUMN' 
+SELECT max(len(Overall)) 
+FROM standing --7 
+ALTER TABLE standing ALTER COLUMN team_name nvarchar(22) NOT NULL
+ALTER TABLE standing ALTER COLUMN Overall nvarchar(7) NOT NULL	
+SELECT TOP 20 * 
+FROM playerstats
+
+SELECT 
+	max(len(Player)) playerlenght, --24
+	max(len(Pos)) poslenght, --5
+FROM playerstats 
+
+--Changing Data Types
+ALTER TABLE playerstats ALTER COLUMN Player nvarchar(24)
+ALTER TABLE playerstats ALTER COLUMN Pos nvarchar(5)
+ALTER TABLE playerstats ALTER COLUMN Tm nvarchar(25)
+ALTER TABLE playerstats ALTER COLUMN G INT
+ALTER TABLE playerstats ALTER COLUMN GS INT
+ALTER TABLE playerstats ALTER COLUMN AGE INT
+
+SELECT TOP 20 * 
+FROM teamstats
+ALTER TABLE teamstats ALTER COLUMN G INT
+ALTER TABLE teamstats ALTER COLUMN MP INT
+ALTER TABLE teamstats ALTER COLUMN FG INT
+ALTER TABLE teamstats ALTER COLUMN FGA INT
+ALTER TABLE teamstats ALTER COLUMN FT INT 
+ALTER TABLE teamstats ALTER COLUMN ORB INT 
+ALTER TABLE teamstats ALTER COLUMN DRB INT 
+ALTER TABLE teamstats ALTER COLUMN TRB INT 
+ALTER TABLE teamstats ALTER COLUMN AST INT 
+ALTER TABLE teamstats ALTER COLUMN STL INT 
+ALTER TABLE teamstats ALTER COLUMN BLK INT 
+ALTER TABLE teamstats ALTER COLUMN PF INT 
+ALTER TABLE teamstats ALTER COLUMN PTS INT 
+
+sp_rename 'teamstats.3PTS', 'three_points', 'COLUMN'
+ALTER TABLE teamstats ALTER COLUMN three_points INT 
+
+--COMPOSITE PRIMARY KEY 
+ALTER TABLE 
+	standing add primary key (team_ID)
+--INDEX 
+CREATE INDEX Player_Name
+on playerstats (Player)
+
+--STORED PROCEDURE
+ALTER PROCEDURE PlayerName(@Player varchar(30))
+AS
+ IF NOT EXISTS (SELECT * FROM playerstats  where Player=@Player) 
+PRINT 
+'No Such Player in the Database'
+
+ELSE
+PRINT 'No Such Player in the Database'
+
+--Finding Duplicate  
+SELECT Player, COUNT(Player) AS DUPLICATES
+FROM playerstats
+GROUP BY Player
+HAVING COUNT(PLAYER) > 1 
+ORDER BY DUPLICATES
+
+--DISTINCT, GROUP BY AND ORDER BY 
+SELECT DISTINCT Player, 
+	AVG(PTS) AS Pts, 
+	AVG(AST) AS Ast
+FROM 
+playerstats
+	GROUP BY Player
+	ORDER BY AVG(AST) DESC
+
+--Equalizing team names from different tables 
+SELECT DISTINCT Tm from playerstats ORDER BY Tm ASC
+SELECT DISTINCT team_name from standing ORDER BY team_name asc
+SELECT DISTINCT team from teamstats ORDER BY team asc
+
+UPDATE playerstats SET Tm ='Atlanta Hawks' where Tm='ATL' 
+UPDATE playerstats SET Tm ='Boston Celtics' where Tm='BOS' 
+UPDATE playerstats SET Tm ='Brooklyn Nets' where Tm='BRK' 
+UPDATE playerstats SET Tm ='Charlotte Hornets*' where Tm='CHO' 
+UPDATE playerstats SET Tm ='Chicago Bulls*' where Tm='CHI'
+UPDATE playerstats SET Tm ='Cleveland Cavaliers' where Tm='CLE'
+UPDATE playerstats SET Tm ='Dallas Mavericks*' where Tm='DAL'
+UPDATE playerstats SET Tm ='Denver Nuggets*' where Tm='DEN'
+UPDATE playerstats SET Tm ='Detroit Pistons' where Tm='DET'
+UPDATE playerstats SET Tm ='Golden State Warriors*' where Tm='GSW'
+UPDATE playerstats SET Tm ='Houston Rockets' where Tm='HOU'
+UPDATE playerstats SET Tm ='Indiana Pacers' where Tm='IND'
+UPDATE playerstats SET Tm ='Los Angeles Clippers' where Tm='LAC'
+UPDATE playerstats SET Tm ='Los Angeles Lakers' where Tm='LAL'
+UPDATE playerstats SET Tm ='Memphis Grizzlies*' where Tm='MEM'
+UPDATE playerstats SET Tm ='Miami Heat*' where Tm='MIA'
+UPDATE playerstats SET Tm ='Milwaukee Bucks*' where Tm='MIL'
+UPDATE playerstats SET Tm ='Minnesota Timberwolves*' where Tm='MIN'
+UPDATE playerstats SET Tm ='New Orleans Pelicans*' where Tm='NOP'
+UPDATE playerstats SET Tm ='New York Knicks' where Tm='NYK'
+UPDATE playerstats SET Tm ='Oklahoma City Thunder' where Tm='OKC'
+UPDATE playerstats SET Tm ='Orlando Magic' where Tm='ORL'
+UPDATE playerstats SET Tm ='Philadelphia 76ers*' where Tm='PHI'
+UPDATE playerstats SET Tm ='Phoenix Suns*' where Tm='PHO'
+UPDATE playerstats SET Tm ='Portland Trail Blazers' where Tm='POR'
+UPDATE playerstats SET Tm ='Sacramento Kings' where Tm='SAC'
+UPDATE playerstats SET Tm ='San Antonio Spurs' where Tm='SAS'
+UPDATE playerstats SET Tm ='Toronto Raptors*' where Tm='TOR'IIII
+UPDATE playerstats SET Tm ='Utah Jazz*' where Tm='UTA'
+UPDATE playerstats SET Tm ='Washington Wizards' where Tm='WAS'
+
+--LIKE
+SELECT* from teamstats where Team LIKE '%GOLD%' 
+--JOIN CLAUSE 
+SELECT * 
+FROM
+playerstats 
+INNER JOIN standing on
+standing.team_name = playerstats.Tm     
+ORDER BY Tm
+ 
+  --CASE WHEN 
+SELECT Player, PTS,
+CASE 
+	WHEN PTS < 21 THEN 'not that great'
+	ELSE 'GOAT'
+END as tag
+FROM playerstats
+ORDER BY PTS DESC
+
+--INTERSECT  
+SELECT TM FROM playerstats
+INTERSECT
+SELECT Team FROM teamstats
+ 
+ -- HAVING 
+ SELECT Player
+ FROM PLAYERSTATS
+	GROUP BY Player
+	HAVING COUNT(PLAYER) < 30
+
+ -- PARTITON BY 
+ SELECT TeamID, Team, FG,FT,
+ COUNT(Team) OVER (PARTITION BY TEAM) FROM teamstats
+ 
+ --NESTED QUERY 
+ SELECT team_name, Overall, 
+	(SELECT SUM(AST) from teamstats 
+	WHERE team_name=Team ) AS TotalAssists 
+	from standing
+	ORDER BY TotalAssists DESC
